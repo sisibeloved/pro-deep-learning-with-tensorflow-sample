@@ -1,2 +1,2 @@
-# pro-deep-learning-with-tensorflow-sample
-Samples in book Pro Deep Learning With TensorFlow
+# Pro Deep Learning With TensorFlow samples
+Samples in book Pro Deep Learning With TensorFlow.
