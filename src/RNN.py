@@ -1,4 +1,4 @@
-# 载入需要使用的库
+# 导入需要使用的库
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib import rnn

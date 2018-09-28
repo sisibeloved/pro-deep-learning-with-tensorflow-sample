@@ -4,12 +4,17 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 %matplotlib inline
 
+# ------------------------------------------------------------
+# 将单词向量进行独热编码的函数
+# ------------------------------------------------------------
 def one_hot(ind, vocab_size):
     rec = np.zeros(vocab_size)
     rec[ind] = 1
     return rec
 
-
+# ----------------------------------------------------------------------
+# 从语料库创建训练数据的函数
+# ----------------------------------------------------------------------
 def create_training_data(corpus_raw, WINDOW_SIZE=2):
     words_list = []
 
@@ -30,7 +35,7 @@ def create_training_data(corpus_raw, WINDOW_SIZE=2):
         word2ind[w] = i
         ind2word[i] = w
 
-    print word2ind
+    print(word2ind)
     sentences_list = corpus_raw.split('.')
     sentences = []
 
@@ -43,27 +48,22 @@ def create_training_data(corpus_raw, WINDOW_SIZE=2):
 
     for sent in sentences:
         for ind, w in enumerate(sent):
-            rec = []
-            for nb_w in sent[max(ind - WINDOW_SIZE, 0): min(ind + WINDOW_SIZE, len(sent)) + 1]:
+            for nb_w in sent[max(ind - WINDOW_SIZE, 0): min(ind + WINDOW_SIZE,
+                                                            len(sent)) + 1]:
                 if nb_w != w:
-                    rec.append(nb_w)
-                data_recs.append([rec, w])
+                    data_recs.append([w, nb_w])
 
     x_train, y_train = [], []
 
     for rec in data_recs:
-        input_ = np.zeros(vocab_size)
-        for i in xrange(WINDOW_SIZE - 1):
-            input_ += one_hot(word2ind[rec[0][i]], vocab_size)
-        input_ = input_ / len(rec[0])
-        x_train.append(input_)
+        x_train.append(one_hot(word2ind[rec[0]], vocab_size))
         y_train.append(one_hot(word2ind[rec[1]], vocab_size))
 
     return x_train, y_train, word2ind, ind2word, vocab_size
 
 
 corpus_raw = "Deep Learning has evolved from Artificial Neural Networks, which has been there since the 1940s. " \
-             "Neural Networks are interconnected networks of processing units called artificial neurons that loosely mimic axons in a biological brain. " \
+             "Neural Networks are interconnected networks of processing unitscalled artificial neurons that loosely mimic axons in a biological brain. " \
              "In a biological neuron, the dendrites receive input signals from various neighboring neurons, typically greater than 1000. " \
              "These modified signals are then passed on to the cell body or soma of the neuron, where these signals are summed together and then passed on to the axon of the neuron. " \
              "If the received input signal is more than a specified threshold, the axon will release a signal which again will pass on to neighboring dendrites of other neurons. " \
@@ -78,11 +78,11 @@ corpus_raw = "Deep Learning has evolved from Artificial Neural Networks, which h
 corpus_raw = corpus_raw.lower()
 x_train, y_train, word2ind, ind2word, vocab_size = create_training_data(corpus_raw, 2)
 
-
-import tensorflow as tf
+# ----------------------------------------------------------------------------
+# 定义 TensorFlow 的操作和变量并开始训练
+# ----------------------------------------------------------------------------
 emb_dims = 128
 learning_rate = 0.001
-
 # ---------------------------------------------
 # 输入输出的占位符
 # ----------------------------------------------
@@ -102,24 +102,23 @@ cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, lab
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 epochs, batch_size = 100, 10
-batch = len(x_train)//batch_size
+batch = len(x_train) // batch_size
 
 # 迭代 n_iter 次
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
-    print 'was here'
-    for epoch in xrange(epochs):
+    print('was here')
+    for epoch in range(epochs):
         batch_index = 0
-        for batch_num in xrange(batch):
+        for batch_num in range(batch):
             x_batch = x_train[batch_index: batch_index + batch_size]
             y_batch = y_train[batch_index: batch_index + batch_size]
             sess.run(optimizer, feed_dict={x: x_batch, y: y_batch})
             print('epoch:', epoch, 'loss :', sess.run(cost, feed_dict={x: x_batch, y: y_batch}))
     W_embed_trained = sess.run(W)
-
 W_embedded = TSNE(n_components=2).fit_transform(W_embed_trained)
 plt.figure(figsize=(10, 10))
-for i in xrange(len(W_embedded)):
+for i in range(len(W_embedded)):
     plt.text(W_embedded[i, 0], W_embedded[i, 1], ind2word[i])
 
 plt.xlim(-150, 150)
